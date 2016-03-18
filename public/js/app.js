@@ -15,20 +15,42 @@ var CommentBox = React.createClass({
     return { data: [] };
   },
 
+  loadCommentsFromServer: function() {
+    // var _this = this;
+    // //simulating ajax request
+    // setTimeout(function() {
+    //   _this.setState({ data: comments});
+    // }, 5000);
+
+    /***now doing ajax request***/
+    $.ajax({
+      url: this.props.url,
+      method: 'get',
+      dataType: 'json',
+      success: function(data){
+        this.setState({ data: data });
+      }.bind(this)
+    });
+  },
+  handleCommitSubmit: function(comment){
+    console.log(comment);
+  },
+
   componentDidMount: function() {
-    var _this = this;
-    //simulating ajax request
-    setTimeout(function() {
-      _this.setState({ data: comments});
-    }, 5000);
+    this.loadCommentsFromServer();
+    setInterval(this.loadCommentsFromServer, 1000);
   },
 
   render: function() {
     return (
       //state can and will change due to CommentBox
       <div className="commentBox">
-        <CommentList data={this.state.data}/>
-        <CommentForm />
+        <CommentList
+          data={this.state.data}
+        />
+        <CommentForm
+          onCommentSubmit={this.handleCommitSubmit}
+        />
       </div>
     );
   }
@@ -80,11 +102,46 @@ var Comment = React.createClass({
 });
 
 var CommentForm = React.createClass({
+  getInitialState: function(){
+    return {author: '', text: ''};
+  },
+  handleAuthorChange: function(e){
+    this.setState({ author: e.target.value })
+  },
+  handleTextChange: function(e){
+    this.setState({ text: e.target.value })
+  },
+  handleSubmit: function(e){
+    e.preventDefault();
+    var author = this.state.author;
+    var text = this.state.text;
+
+    this.props.onCommentSubmit({ author: author, text: text});
+
+    this.setState({ author: '', text: '' });
+    // e.target.reset();
+  },
   render: function() {
     return (
-      <div className="commentForm">
-        Hello, world! I am a CommentForm.
-      </div>
+      <form
+        className="commentForm"
+        onSubmit={this.handleSubmit}
+      >
+        <input
+          type="text"
+          placeholder="Your name"
+          value={this.state.author}
+          onChange={this.handleAuthorChange}
+        />
+        <input
+          type="text"
+          placeholder="Say something .."
+          value={this.state.text}
+          onChange={this.handleTextChange}
+        />
+        <button type="submit">Post</button>
+
+      </form>
     );
   }
 });
@@ -92,6 +149,7 @@ var CommentForm = React.createClass({
 ReactDOM.render(
   //using url due to using ajax
   //jsonplaceholder.typicode.com
+  //url should point to where your json server is
   <CommentBox url="http://localhost:3000/comments" />,
   document.getElementById('content')
 );
