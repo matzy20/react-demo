@@ -23,39 +23,53 @@ var CommentBox = React.createClass({
     // }, 5000);
 
     /***now doing ajax request***/
+    //grabbing data
     $.ajax({
       url: this.props.url,
-      method: 'get',
+      method: 'GET',
       dataType: 'json',
       success: function(data){
         this.setState({ data: data });
       }.bind(this)
     });
   },
+
   handleCommitSubmit: function(comment){
     console.log(comment);
+    //posting comments to server
+    $.ajax({
+      url: this.props.url,
+      method: 'POST',
+      dataType: 'json',
+      data: comment,
+      success: function(data){
+        console.log('data', data);
+        //attaching new data to be posted
+        this.setState({ data: this.state.data.concat(data)});
+      }.bind(this)
+    });
   },
 
   componentDidMount: function() {
     this.loadCommentsFromServer();
-    setInterval(this.loadCommentsFromServer, 1000);
+    setInterval(this.loadCommentsFromServer, 5000);
   },
 
   render: function() {
     return (
       //state can and will change due to CommentBox
+      //able to move around components like elements
       <div className="commentBox">
-        <CommentList
-          data={this.state.data}
-        />
         <CommentForm
           onCommentSubmit={this.handleCommitSubmit}
+        />
+        <CommentList
+          data={this.state.data}
         />
       </div>
     );
   }
 });
-
 
 var CommentList = React.createClass({
   render: function() {
@@ -65,8 +79,8 @@ var CommentList = React.createClass({
     var commentNodes = this.props.data.map(function(comment, index){
       return (
         <Comment
-        author={comment.author}
-        key={index}
+          author={comment.author}
+          key={index}
         >
           {comment.text}
         </Comment>
@@ -78,7 +92,7 @@ var CommentList = React.createClass({
     // ];
     return (
       <div className="commentList">
-        {commentNodes}
+        {commentNodes.reverse()}
       </div>
     );
   }
@@ -116,11 +130,13 @@ var CommentForm = React.createClass({
     var author = this.state.author;
     var text = this.state.text;
 
+    //retains state from parent state
     this.props.onCommentSubmit({ author: author, text: text});
-
+    //this state will be different
     this.setState({ author: '', text: '' });
     // e.target.reset();
   },
+
   render: function() {
     return (
       <form
